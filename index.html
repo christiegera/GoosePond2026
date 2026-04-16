@@ -18,25 +18,25 @@
   --radius: 10px; --shadow: 0 2px 12px rgba(0,0,0,0.12);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; overflow: hidden; }
-body { font-family: 'DM Sans', sans-serif; background: var(--forest); color: var(--ink); display: flex; flex-direction: column; }
+html, body { height: 100%; }
+body { font-family: 'DM Sans', sans-serif; background: var(--forest); color: var(--ink); }
 
 /* ── SCREENS ── */
-.screen { display: none; flex-direction: column; height: 100%; }
-.screen.active { display: flex; }
+.screen { display: none; }
+.screen.active { display: block; }
 
 /* ══════════════════════════════════════
    HOME SCREEN
 ══════════════════════════════════════ */
 #screen-home {
   background: var(--forest);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .home-hero {
   background: var(--forest);
-  padding: 48px 24px 32px;
+  padding: 18px 24px 16px;
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -46,34 +46,33 @@ body { font-family: 'DM Sans', sans-serif; background: var(--forest); color: var
   position: absolute; inset: 0;
   background: repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(255,255,255,0.02) 20px,rgba(255,255,255,0.02) 40px);
 }
-.home-hero-inner { position: relative; z-index: 1; }
+.home-hero-inner { position: relative; z-index: 1; display: flex; align-items: center; gap: 14px; text-align: left; }
 .home-camp-name {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 13px; letter-spacing: 4px;
-  color: var(--tan); text-transform: uppercase; margin-bottom: 8px;
+  font-size: 11px; letter-spacing: 3px;
+  color: var(--tan); text-transform: uppercase; margin-bottom: 2px;
 }
 .home-title {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 52px; line-height: 0.95; color: white; margin-bottom: 12px;
+  font-size: 32px; line-height: 1; color: white; margin-bottom: 0;
 }
-.home-title span { color: var(--tan); display: block; }
+.home-title span { color: var(--tan); display: inline; }
 .home-subtitle {
-  font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.5;
+  font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.4; margin-top: 2px;
 }
 
 .home-body {
   background: var(--cream);
-  border-radius: 20px 20px 0 0;
-  padding: 28px 20px 40px;
-  flex: 1;
+  border-radius: 14px 14px 0 0;
+  padding: 18px 16px 40px;
 }
 .home-section-label {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 13px; letter-spacing: 3px; color: var(--mid);
-  margin-bottom: 16px;
+  font-size: 12px; letter-spacing: 3px; color: var(--mid);
+  margin-bottom: 12px;
 }
 
-.scout-list { display: flex; flex-direction: column; gap: 12px; }
+.scout-list { display: flex; flex-direction: column; gap: 8px; }
 
 .scout-row {
   background: white;
@@ -81,17 +80,17 @@ body { font-family: 'DM Sans', sans-serif; background: var(--forest); color: var
   border: 1.5px solid var(--tan-lt);
   box-shadow: var(--shadow);
   display: flex; align-items: center;
-  padding: 14px 16px; gap: 14px;
+  padding: 10px 14px; gap: 12px;
   cursor: pointer; transition: transform 0.1s, box-shadow 0.1s;
   -webkit-user-select: none; user-select: none;
 }
 .scout-row:active { transform: scale(0.98); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
 
 .scout-avatar {
-  width: 46px; height: 46px; border-radius: 50%;
+  width: 38px; height: 38px; border-radius: 50%;
   background: var(--olive); color: var(--tan);
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Bebas Neue', sans-serif; font-size: 22px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 19px;
   flex-shrink: 0;
 }
 .scout-row-info { flex: 1; min-width: 0; }
@@ -111,8 +110,13 @@ body { font-family: 'DM Sans', sans-serif; background: var(--forest); color: var
 ══════════════════════════════════════ */
 #screen-scout {
   background: var(--cream);
+  position: fixed;
+  inset: 0;
+  display: none;
+  flex-direction: column;
   overflow: hidden;
 }
+#screen-scout.active { display: flex; }
 
 /* Top bar */
 .scout-bar {
@@ -295,9 +299,12 @@ body { font-family: 'DM Sans', sans-serif; background: var(--forest); color: var
 <div class="screen active" id="screen-home">
   <div class="home-hero">
     <div class="home-hero-inner">
-      <div class="home-camp-name">Goose Pond Scout Reservation · 2026</div>
-      <div class="home-title">Camp<span>Prep</span></div>
-      <div class="home-subtitle">Tap your name · Check off prereqs · Show up ready</div>
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--tan);color:var(--forest);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🏕️</div>
+      <div style="position:relative;z-index:1;">
+        <div class="home-camp-name">Goose Pond · 2026</div>
+        <div class="home-title">Camp <span>Prep</span></div>
+        <div class="home-subtitle">Tap your name · Check off prereqs</div>
+      </div>
     </div>
   </div>
   <div class="home-body">
