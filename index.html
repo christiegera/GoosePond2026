@@ -305,11 +305,26 @@ body { font-family: 'DM Sans', sans-serif; background: var(--forest); color: var
         <div class="home-title">Camp <span>Prep</span></div>
         <div class="home-subtitle">Tap your name · Check off prereqs</div>
       </div>
+      <button onclick="openSMDashboard()" style="margin-left:auto;flex-shrink:0;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:white;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;padding:7px 12px;border-radius:6px;cursor:pointer;">🦅 SM</button>
     </div>
   </div>
   <div class="home-body">
     <div class="home-section-label">Who Are You?</div>
     <div class="scout-list" id="scout-list"></div>
+  </div>
+</div>
+
+<!-- ══════════ SM DASHBOARD ══════════ -->
+<div class="screen" id="screen-sm">
+  <div class="scout-bar" style="background:var(--forest);">
+    <button class="back-btn" onclick="goHome()">← Back</button>
+    <div class="scout-bar-info">
+      <div class="scout-bar-name">Scoutmaster Dashboard</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;" id="sm-last-updated">Live from Firebase</div>
+    </div>
+  </div>
+  <div class="scout-content" id="sm-content">
+    <div style="padding:16px 14px;" id="sm-dashboard"></div>
   </div>
 </div>
 
@@ -565,10 +580,72 @@ const SCOUTS = [
 ];
 
 // ═══════════════════════════════════════════════════
-// STORAGE
+// FIREBASE
 // ═══════════════════════════════════════════════════
-const getChecked = id => { try { return JSON.parse(localStorage.getItem('gpsr26_' + id)) || {}; } catch { return {}; } };
-const saveChecked = (id, data) => { try { localStorage.setItem('gpsr26_' + id, JSON.stringify(data)); } catch {} };
+const firebaseConfig = {
+  apiKey: "AIzaSyDlavqH3MP9zSkIq6z8x9Uz7CFXNqTHaMI",
+  authDomain: "goosepond2026-2c32e.firebaseapp.com",
+  databaseURL: "https://goosepond2026-2c32e-default-rtdb.firebaseio.com",
+  projectId: "goosepond2026-2c32e",
+  storageBucket: "goosepond2026-2c32e.firebasestorage.app",
+  messagingSenderId: "1022270161784",
+  appId: "1:1022270161784:web:46a7145309a3d6b99f3e8d"
+};
+
+// Load Firebase from CDN
+const _fbScript = document.createElement('script');
+_fbScript.type = 'module';
+_fbScript.textContent = `
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  const app = initializeApp(${JSON.stringify(firebaseConfig)});
+  const db = getDatabase(app);
+  window._fbDb = db;
+  window._fbRef = ref;
+  window._fbSet = set;
+  window._fbOnValue = onValue;
+  window._fbGet = get;
+  window._fbReady = true;
+  document.dispatchEvent(new Event('firebase-ready'));
+`;
+document.head.appendChild(_fbScript);
+
+// In-memory cache — starts from localStorage, syncs to Firebase
+const _cache = {};
+
+// Seed cache from localStorage on startup (instant load while Firebase connects)
+SCOUTS.forEach(s => {
+  try { _cache[s.id] = JSON.parse(localStorage.getItem('gpsr26_' + s.id)) || {}; } catch { _cache[s.id] = {}; }
+});
+
+const getChecked = id => _cache[id] || {};
+
+function saveChecked(id, data) {
+  _cache[id] = data;
+  // Save to localStorage as fallback
+  try { localStorage.setItem('gpsr26_' + id, JSON.stringify(data)); } catch {}
+  // Save to Firebase
+  if (window._fbReady) {
+    window._fbSet(window._fbRef(window._fbDb, 'scouts/' + id), data);
+  }
+}
+
+// When Firebase is ready, subscribe to all scout data live
+document.addEventListener('firebase-ready', () => {
+  SCOUTS.forEach(scout => {
+    window._fbOnValue(window._fbRef(window._fbDb, 'scouts/' + scout.id), snap => {
+      const val = snap.val();
+      if (val) {
+        _cache[scout.id] = val;
+        try { localStorage.setItem('gpsr26_' + scout.id, JSON.stringify(val)); } catch {}
+        // Re-render if this scout is currently open or if on home
+        if (currentScout?.id === scout.id) renderScoutView();
+        if (document.getElementById('screen-home').classList.contains('active')) renderHome();
+        if (document.getElementById('screen-sm').classList.contains('active')) renderSMDashboard();
+      }
+    });
+  });
+});
 
 function scoutStats(scout) {
   const ch = getChecked(scout.id);
@@ -755,6 +832,83 @@ function toggleReq(scoutId, reqId) {
   ch[reqId] = !ch[reqId];
   saveChecked(scoutId, ch);
   renderScoutView();
+}
+
+// ═══════════════════════════════════════════════════
+// SM DASHBOARD
+// ═══════════════════════════════════════════════════
+function openSMDashboard() {
+  document.getElementById('screen-home').classList.remove('active');
+  document.getElementById('screen-sm').classList.add('active');
+  document.getElementById('sm-content').scrollTop = 0;
+  renderSMDashboard();
+}
+
+function renderSMDashboard() {
+  const el = document.getElementById('sm-dashboard');
+  el.innerHTML = '';
+
+  // Troop summary bar
+  let troopTotal = 0, troopDone = 0;
+  SCOUTS.forEach(s => { const st = scoutStats(s); troopTotal += st.total; troopDone += st.done; });
+  const troopPct = troopTotal ? Math.round(troopDone / troopTotal * 100) : 0;
+
+  const summary = document.createElement('div');
+  summary.style.cssText = 'background:var(--olive);border-radius:10px;padding:14px 16px;margin-bottom:16px;';
+  summary.innerHTML = `
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--tan);margin-bottom:8px;">TROOP OVERALL — ${troopDone}/${troopTotal} PREREQS DONE</div>
+    <div style="background:rgba(255,255,255,0.15);border-radius:99px;height:10px;overflow:hidden;">
+      <div style="height:100%;width:${troopPct}%;background:var(--tan);border-radius:99px;transition:width 0.4s;"></div>
+    </div>
+    <div style="font-family:'DM Mono',monospace;font-size:13px;color:white;margin-top:6px;text-align:right;">${troopPct}%</div>
+  `;
+  el.appendChild(summary);
+
+  // Per-scout cards
+  SCOUTS.forEach(scout => {
+    const { total, done, pct } = scoutStats(scout);
+    const ch = getChecked(scout.id);
+    const remaining = [];
+    scout.badges.forEach(badge => {
+      badge.reqs.forEach(req => {
+        if (!ch[req.id]) remaining.push({ badge: badge.name, req });
+      });
+    });
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background:white;border-radius:10px;border:1.5px solid var(--tan-lt);box-shadow:0 1px 6px rgba(0,0,0,0.08);margin-bottom:12px;overflow:hidden;';
+
+    const headerBg = pct === 100 ? 'var(--done)' : 'var(--olive)';
+    card.innerHTML = `
+      <div style="background:${headerBg};padding:11px 14px;display:flex;align-items:center;gap:12px;">
+        <div style="width:34px;height:34px;border-radius:50%;background:var(--tan);color:var(--forest);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px;flex-shrink:0;">${scout.initial}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:white;line-height:1;">${scout.name}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:2px;">${done}/${total} prereqs · ${pct}%</div>
+        </div>
+        ${pct === 100 ? '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:13px;color:white;letter-spacing:1px;">✓ READY</div>' : ''}
+      </div>
+      <div style="padding:10px 14px;">
+        <div style="background:var(--tan-lt);border-radius:99px;height:6px;overflow:hidden;margin-bottom:10px;">
+          <div style="height:100%;width:${pct}%;background:${pct===100?'var(--done)':'var(--tan)'};border-radius:99px;transition:width 0.4s;"></div>
+        </div>
+        ${remaining.length === 0
+          ? `<div style="font-size:13px;color:var(--done);font-weight:600;">🎉 All prereqs complete!</div>`
+          : `<div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--mid);margin-bottom:8px;">STILL TO DO</div>
+             <div style="display:flex;flex-direction:column;gap:6px;">
+               ${remaining.map(({badge, req}) => `
+                 <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.5;">
+                   <div style="background:var(--sky);color:white;font-family:'DM Mono',monospace;font-size:9px;padding:2px 6px;border-radius:3px;flex-shrink:0;margin-top:1px;">${badge}</div>
+                   <div style="color:var(--ink);">${req.text.length > 80 ? req.text.slice(0,80)+'…' : req.text}</div>
+                 </div>`).join('')}
+             </div>`
+        }
+      </div>
+    `;
+    el.appendChild(card);
+  });
+
+  document.getElementById('sm-last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
 }
 
 // ═══════════════════════════════════════════════════
