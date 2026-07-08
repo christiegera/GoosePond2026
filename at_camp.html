@@ -258,29 +258,30 @@
 
   /* ===== Contacts tab ===== */
   .contact-row{
-    display:flex; align-items:flex-start; gap:10px;
-    padding:10px 0; border-top:1px solid var(--line);
+    display:flex; align-items:flex-start; gap:8px;
+    padding:11px 0; border-top:1px solid var(--line);
   }
   .contact-row:first-child{ border-top:none; }
-  .contact-name-col{ font-weight:700; font-size:13px; flex:0 0 82px; padding-top:5px; line-height:1.25; }
+  .contact-name-col{ font-weight:700; font-size:13px; flex:0 0 auto; white-space:nowrap; padding-top:6px; padding-right:2px; }
   .contact-sub{ font-size:11.5px; color:#4b4b3e; margin-bottom:2px; }
-  .phone-col{ display:flex; flex-direction:column; gap:5px; flex:1; min-width:0; }
-  .phone-line-item{ display:flex; align-items:center; gap:5px; }
-  .phone-label{ font-size:10.5px; font-weight:600; color:#4b4b3e; flex:0 0 38px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .phone-col{ display:flex; flex-direction:column; gap:6px; flex:1; min-width:0; }
+  .phone-line-item{ display:flex; align-items:center; gap:7px; }
+  .phone-label{ font-size:11px; font-weight:600; color:#4b4b3e; flex:0 0 auto; min-width:44px; white-space:nowrap; }
+  .phone-label:empty{ min-width:0; }
   .phone-chip{
-    display:flex; align-items:center; gap:2px;
-    background:var(--canvas-deep); border-radius:8px; padding:2px;
+    display:flex; align-items:center; gap:4px;
+    background:var(--canvas-deep); border-radius:9px; padding:3px; flex:1;
   }
   .phone-num-btn{
-    font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:700;
+    font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:700;
     background:none; border:none; color:var(--forest-deep);
-    padding:4px 6px; cursor:pointer; text-align:left; border-radius:6px;
+    padding:6px 9px; cursor:pointer; text-align:left; border-radius:7px; flex:1;
   }
   .phone-num-btn.copied{ background:var(--forest); color:#f3efdd; }
   .icon-btn{
     display:flex; align-items:center; justify-content:center;
-    width:23px; height:23px; flex:none; border-radius:6px; text-decoration:none;
-    background:var(--forest); color:#f3efdd; font-size:11px;
+    width:28px; height:28px; flex:none; border-radius:7px; text-decoration:none;
+    background:var(--forest); color:#f3efdd; font-size:13px;
   }
   .icon-btn.sms{ background:var(--water); }
   .contact-group-title{
@@ -1041,7 +1042,7 @@ function buildContacts(){
       <div class="contact-name-col">${c.name}</div>
       <div class="phone-col">
         <div class="contact-sub">${c.sub}</div>
-        ${phoneBlock('Office', c.tel)}
+        ${phoneBlock('', c.tel)}
       </div>
     </div>`).join('');
 
@@ -1050,7 +1051,7 @@ function buildContacts(){
     <div class="contact-row">
       <div class="contact-name-col">${s.name}</div>
       <div class="phone-col">
-        ${phoneBlock('Scout', s.cell)}
+        ${phoneBlock('', s.cell)}
         ${phoneBlock(s.e1[0], s.e1[1])}
         ${phoneBlock(s.e2[0], s.e2[1])}
       </div>
@@ -1061,8 +1062,8 @@ function buildContacts(){
     <div class="contact-row">
       <div class="contact-name-col">${s.name}</div>
       <div class="phone-col">
-        ${phoneBlock('Cell', s.cell)}
-        ${phoneBlock(s.e1[0] + ' (emerg.)', s.e1[1])}
+        ${phoneBlock('', s.cell)}
+        ${phoneBlock(s.e1[0], s.e1[1])}
       </div>
     </div>`).join('');
 }
